@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard IoT Penyiraman</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- MQTT JS -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+
+  <h2>🌱 Dashboard Penyiraman Tanaman</h2>
+
+  <div class="status">
+    MQTT: <span id="mqttStatus" class="disconnected">DISCONNECTED</span>
+  </div>
+
+  <div class="card">
+    <div class="data">
+      <p>Kelembapan (AVG)</p>
+      <h3><span id="soil">--</span> %</h3>
+    </div>
+
+    <div class="row">
+      <div class="box">V<br><span id="volt">--</span></div>
+      <div class="box">I<br><span id="current">--</span></div>
+      <div class="box">W<br><span id="power">--</span></div>
+    </div>
+
+    <p>Mode: <b><span id="mode">--</span></b></p>
+    <p>Pompa: <b><span id="pompa">--</span></b></p>
+
+    <div class="btn-group">
+      <button onclick="setMode('AUTO')">AUTO</button>
+      <button onclick="setMode('MANUAL')">MANUAL</button>
+    </div>
+
+    <div class="btn-group">
+      <button onclick="setPump('ON')">POMPA ON</button>
+      <button onclick="setPump('OFF')">POMPA OFF</button>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script src="script.js"></script>
+</body>
+</html>

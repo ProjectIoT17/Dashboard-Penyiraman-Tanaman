@@ -1,0 +1,79 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f3f6f9;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+}
+
+h2 {
+  color: #2c3e50;
+}
+
+.status {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.connected {
+  color: #2ecc71;
+  font-weight: bold;
+}
+
+.disconnected {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.card {
+  background: #ffffff;
+  max-width: 360px;
+  margin: auto;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+.data h3 {
+  margin: 5px 0 15px 0;
+  font-size: 32px;
+  color: #27ae60;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.box {
+  background: #ecf0f1;
+  width: 30%;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.box span {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.btn-group {
+  margin-top: 10px;
+}
+
+button {
+  padding: 10px 16px;
+  margin: 5px;
+  font-size: 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #3498db;
+  color: white;
+}
+
+button:hover {
+  background: #2980b9;
+}
