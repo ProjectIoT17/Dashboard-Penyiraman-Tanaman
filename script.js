@@ -1,4 +1,4 @@
-const broker = "wss:9a08ecfbde8e4479bf7ab89c6ba00867.s1.eu.hivemq.cloud:8884";
+const broker = "wss://9a08ecfbde8e4479bf7ab89c6ba00867.s1.eu.hivemq.cloud:8884/mqtt";
 
 const options = {
   username: "Dashboard_ESP32",
