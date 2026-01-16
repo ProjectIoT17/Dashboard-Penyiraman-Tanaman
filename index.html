@@ -5,10 +5,9 @@
   <title>Dashboard IoT Penyiraman</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- MQTT JS -->
+  <!-- MQTT.js -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 <body>
@@ -16,19 +15,29 @@
   <h2>🌱 Dashboard Penyiraman Tanaman</h2>
 
   <div class="status">
-    MQTT: <span id="mqttStatus" class="disconnected">DISCONNECTED</span>
+    Status MQTT:
+    <span id="mqttStatus" class="disconnected">DISCONNECTED</span>
   </div>
 
   <div class="card">
-    <div class="data">
+    <div class="big">
       <p>Kelembapan (AVG)</p>
-      <h3><span id="soil">--</span> %</h3>
+      <h1><span id="soil">--</span>%</h1>
     </div>
 
     <div class="row">
-      <div class="box">V<br><span id="volt">--</span></div>
-      <div class="box">I<br><span id="current">--</span></div>
-      <div class="box">W<br><span id="power">--</span></div>
+      <div class="box">
+        <p>V</p>
+        <span id="volt">--</span>
+      </div>
+      <div class="box">
+        <p>I</p>
+        <span id="current">--</span>
+      </div>
+      <div class="box">
+        <p>W</p>
+        <span id="power">--</span>
+      </div>
     </div>
 
     <p>Mode: <b><span id="mode">--</span></b></p>
@@ -40,12 +49,11 @@
     </div>
 
     <div class="btn-group">
-      <button onclick="setPump('ON')">POMPA ON</button>
-      <button onclick="setPump('OFF')">POMPA OFF</button>
+      <button class="on" onclick="setPump('ON')">POMPA ON</button>
+      <button class="off" onclick="setPump('OFF')">POMPA OFF</button>
     </div>
   </div>
 
-  <!-- JS -->
   <script src="script.js"></script>
 </body>
 </html>
