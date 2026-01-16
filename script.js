@@ -1,13 +1,23 @@
-// ================= MQTT CONFIG =================
-const broker = "wss://broker.hivemq.com:8884/mqtt";
-const client = mqtt.connect(broker);
+/* ================= MQTT CONFIG (HiveMQ Cloud) ================= */
+const broker   = "wss:9a08ecfbde8e4479bf7ab89c6ba00867.s1.eu.hivemq.cloud:8884";
+const options = {
+  username: "Dashboard_ESP32",
+  password: "Project18116*",
+  clean: true,
+  connectTimeout: 4000,
+  reconnectPeriod: 2000
+};
 
-// ================= MQTT STATUS =================
+const client = mqtt.connect(broker, options);
+
+/* ================= ELEMENT ================= */
 const mqttStatus = document.getElementById("mqttStatus");
 
+/* ================= MQTT EVENTS ================= */
 client.on("connect", () => {
   mqttStatus.textContent = "CONNECTED";
   mqttStatus.className = "connected";
+
   client.subscribe("iot/#");
 });
 
@@ -21,7 +31,11 @@ client.on("offline", () => {
   mqttStatus.className = "disconnected";
 });
 
-// ================= MQTT RECEIVE =================
+client.on("error", (err) => {
+  console.error("MQTT Error:", err);
+});
+
+/* ================= RECEIVE DATA ================= */
 client.on("message", (topic, message) => {
   const data = message.toString();
 
@@ -29,25 +43,30 @@ client.on("message", (topic, message) => {
     case "iot/soil/avg":
       document.getElementById("soil").innerText = data;
       break;
+
     case "iot/tegangan":
       document.getElementById("volt").innerText = data;
       break;
+
     case "iot/arus":
       document.getElementById("current").innerText = data;
       break;
+
     case "iot/daya":
       document.getElementById("power").innerText = data;
       break;
+
     case "iot/mode":
       document.getElementById("mode").innerText = data;
       break;
+
     case "iot/pompa/status":
       document.getElementById("pompa").innerText = data;
       break;
   }
 });
 
-// ================= CONTROL =================
+/* ================= CONTROL ================= */
 function setMode(mode) {
   client.publish("iot/mode/cmd", mode);
 }
