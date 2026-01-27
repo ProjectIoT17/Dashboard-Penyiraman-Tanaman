@@ -1,51 +1,51 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard Penetasan Telur</title>
-    <link rel="stylesheet" href="style.css">
-
-    <!-- MQTT JS -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Dashboard Penyiraman</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 <body>
 
-    <div class="container">
-        <h1>🐣 Sistem Penetasan Telur</h1>
+<h2>🌱 Dashboard Penyiraman Otomatis</h2>
 
-        <!-- Monitoring -->
-        <div class="card">
-            <h2>Monitoring Suhu</h2>
-            <p class="value">
-                <span id="suhu">--</span> °C
-            </p>
-        </div>
+<div class="status">
+  MQTT: <span id="mqttStatus" class="disconnected">DISCONNECTED</span>
+</div>
 
-        <!-- Setpoint -->
-        <div class="card">
-            <h2>Pengaturan Batas Suhu</h2>
+<div class="card">
+  <h1><span id="soil">--</span>%</h1>
+  <p>Kelembapan AVG</p>
 
-            <label>Batas Suhu Bawah (°C)</label>
-            <input type="number" step="0.1" id="setLow">
-
-            <label>Batas Suhu Atas (°C)</label>
-            <input type="number" step="0.1" id="setHigh">
-
-            <button onclick="kirimSetpoint()">SIMPAN</button>
-        </div>
-
-        <!-- Status -->
-        <div class="card">
-            <h2>Status Sistem</h2>
-            <p>Batas Bawah: <b id="lowView">--</b> °C</p>
-            <p>Batas Atas: <b id="highView">--</b> °C</p>
-        </div>
-
-        <footer>
-            <p>ESP32 - HiveMQ - IoT Incubator</p>
-        </footer>
+  <div class="row">
+    <div class="box">
+      <p>Volt</p>
+      <span id="volt">--</span> <small>V</small>
     </div>
+    <div class="box">
+      <p>Arus</p>
+      <span id="current">--</span> <small>mA</small>
+    </div>
+    <div class="box">
+      <p>Daya</p>
+      <span id="power">--</span> <small>Watt</small>
+    </div>
+  </div>
 
-    <script src="script.js"></script>
+  <p>Mode: <b><span id="mode">--</span></b></p>
+  <p>Pompa: <b><span id="pompa">--</span></b></p>
+
+  <button onclick="setMode('AUTO')">AUTO</button>
+  <button onclick="setMode('MANUAL')">MANUAL</button><br>
+  <button class="on" onclick="setPump('ON')">POMPA ON</button>
+  <button class="off" onclick="setPump('OFF')">POMPA OFF</button>
+<footer>
+            <p>ESP32 - HiveMQ - IoT Penyiraman Otomatis</p>
+        </footer>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
