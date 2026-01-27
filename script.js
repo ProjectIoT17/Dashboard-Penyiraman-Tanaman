@@ -1,8 +1,8 @@
-const broker = "wss://9a08ecfbde8e4479bf7ab89c6ba00867.s1.eu.hivemq.cloud:8884/mqtt";
+const broker = "wss://d8b9ac96f2374248a0784545f5e59901.s1.eu.hivemq.cloud:8884/mqtt";
 
 const options = {
-  username: "Dashboard_ESP32",
-  password: "Project18116*",
+  username: "Penyiraman_Otomatis",
+  password: "Pro111816",
   reconnectPeriod: 2000
 };
 
