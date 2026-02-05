@@ -6,7 +6,7 @@ const client = mqtt.connect(
   {
     username: "Penyiraman_Otomatis",
     password: "Pro111816",
-    reconnectPeriod: 3000,
+    reconnectPeriod: 2000,   // lebih cepat reconnect
     clean: true
   }
 );
@@ -25,18 +25,21 @@ const modeEl  = document.getElementById("mode");
 const pompaEl = document.getElementById("pompa");
 
 /*********************************************************
- * ESP32 HEARTBEAT STATE
+ * HEARTBEAT STATE
  *********************************************************/
-let lastHeartbeat = null;       // waktu heartbeat terakhir
-let heartbeatEver = false;      // apakah pernah menerima heartbeat
-const HEARTBEAT_TIMEOUT = 6000; // ms (sesuai ESP32 publish ~2 detik)
+let lastHeartbeat = 0;
+let everOnline = false;
 
-// Status awal dashboard (REALISTIS)
+const HEARTBEAT_TIMEOUT = 3500; // 🔥 cepat OFFLINE
+const CHECKING_TIMEOUT  = 3000; // 🔥 checking singkat
+const pageStart = Date.now();
+
+// Status awal
 espStatus.textContent = "CHECKING...";
 espStatus.className = "checking";
 
 /*********************************************************
- * CHART SETUP
+ * CHART
  *********************************************************/
 const ctx = document.getElementById("soilChart").getContext("2d");
 
@@ -48,17 +51,15 @@ const soilChart = new Chart(ctx, {
       label: "Kelembapan (%)",
       data: [],
       borderColor: "#2ecc71",
-      backgroundColor: "rgba(46,204,113,0.3)",
-      tension: 0.4,
+      backgroundColor: "rgba(46,204,113,0.25)",
+      tension: 0.35,
       fill: true
     }]
   },
   options: {
     responsive: true,
     animation: false,
-    scales: {
-      y: { min: 0, max: 100 }
-    }
+    scales: { y: { min: 0, max: 100 } }
   }
 });
 
@@ -66,7 +67,7 @@ function addSoilData(val) {
   soilChart.data.labels.push(new Date().toLocaleTimeString());
   soilChart.data.datasets[0].data.push(val);
 
-  if (soilChart.data.labels.length > 30) {
+  if (soilChart.data.labels.length > 20) {
     soilChart.data.labels.shift();
     soilChart.data.datasets[0].data.shift();
   }
@@ -79,8 +80,6 @@ function addSoilData(val) {
 client.on("connect", () => {
   mqttStatus.textContent = "CONNECTED";
   mqttStatus.className = "ok";
-
-  // Subscribe SEMUA topic irrigation
   client.subscribe("irrigation/#");
 });
 
@@ -90,53 +89,60 @@ client.on("offline", () => {
 });
 
 /*********************************************************
- * MQTT MESSAGE HANDLER
+ * MESSAGE HANDLER
  *********************************************************/
 client.on("message", (topic, msg) => {
   const data = msg.toString();
 
-  /*******************************************************
-   * HEARTBEAT → SATU-SATUNYA PENENTU STATUS ESP32
-   *******************************************************/
+  // ===== HEARTBEAT =====
   if (topic === "irrigation/heartbeat") {
     lastHeartbeat = Date.now();
-    heartbeatEver = true;
+    everOnline = true;
 
     espStatus.textContent = "ONLINE";
     espStatus.className = "ok";
-    return; // heartbeat tidak dipakai untuk UI lain
+    return;
   }
 
-  /*******************************************************
-   * DATA SENSOR → DISPLAY SAJA (TIDAK UBAH STATUS)
-   *******************************************************/
+  // ===== DATA =====
   if (topic === "irrigation/soil") {
     soilEl.textContent = data;
     addSoilData(Number(data));
   }
-
   if (topic === "irrigation/voltage") voltEl.textContent = data;
   if (topic === "irrigation/current") currEl.textContent = data;
-  if (topic === "irrigation/power") powerEl.textContent = data;
-  if (topic === "irrigation/mode") modeEl.textContent = data === "1" ? "AUTO" : "MANUAL";
-  if (topic === "irrigation/pump") pompaEl.textContent = data === "1" ? "ON" : "OFF";
+  if (topic === "irrigation/power")   powerEl.textContent = data;
+  if (topic === "irrigation/mode")    modeEl.textContent = data === "1" ? "AUTO" : "MANUAL";
+  if (topic === "irrigation/pump")    pompaEl.textContent = data === "1" ? "ON" : "OFF";
 });
 
 /*********************************************************
- * HEARTBEAT TIMEOUT CHECK
+ * STATUS MONITOR (RESPONS CEPAT)
  *********************************************************/
 setInterval(() => {
-  // Jangan OFFLINE kalau belum pernah ada heartbeat
-  if (!heartbeatEver) return;
+  const now = Date.now();
 
-  if (Date.now() - lastHeartbeat > HEARTBEAT_TIMEOUT) {
+  // BELUM ADA HEARTBEAT SAMA SEKALI
+  if (!everOnline) {
+    if (now - pageStart < CHECKING_TIMEOUT) {
+      espStatus.textContent = "CHECKING...";
+      espStatus.className = "checking";
+    } else {
+      espStatus.textContent = "OFFLINE";
+      espStatus.className = "bad";
+    }
+    return;
+  }
+
+  // PERNAH ONLINE → CEK TIMEOUT
+  if (now - lastHeartbeat > HEARTBEAT_TIMEOUT) {
     espStatus.textContent = "OFFLINE";
     espStatus.className = "bad";
   }
-}, 2000);
+}, 1000);
 
 /*********************************************************
- * CONTROL BUTTONS
+ * CONTROL
  *********************************************************/
 function toggleMode() {
   client.publish("irrigation/cmd/mode", "TOGGLE");
