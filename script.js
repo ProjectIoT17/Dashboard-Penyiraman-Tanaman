@@ -3,75 +3,82 @@ const client = mqtt.connect(
   {
     username: "Penyiraman_Otomatis",
     password: "Pro111816",
-    clean: true,
-    connectTimeout: 2000
+    reconnectPeriod: 3000
   }
 );
 
 const mqttStatus = document.getElementById("mqttStatus");
 const espStatus  = document.getElementById("espStatus");
 
-let lastESP32Time = 0;
+let lastESP32 = 0;
 
-// ================= MQTT =================
+/* ===== CHART ===== */
+const ctx = document.getElementById("soilChart").getContext("2d");
+const soilChart = new Chart(ctx, {
+  type: "line",
+  data: {
+    labels: [],
+    datasets: [{
+      label: "Kelembapan (%)",
+      data: [],
+      borderColor: "#2ecc71",
+      backgroundColor: "rgba(46,204,113,0.3)",
+      tension: 0.4,
+      fill: true
+    }]
+  },
+  options: {
+    responsive: true,
+    animation: false,
+    scales: { y: { min: 0, max: 100 } }
+  }
+});
+
+function addSoilData(val) {
+  soilChart.data.labels.push(new Date().toLocaleTimeString());
+  soilChart.data.datasets[0].data.push(val);
+
+  if (soilChart.data.labels.length > 30) {
+    soilChart.data.labels.shift();
+    soilChart.data.datasets[0].data.shift();
+  }
+  soilChart.update();
+}
+
+/* ===== MQTT ===== */
 client.on("connect", () => {
   mqttStatus.textContent = "CONNECTED";
-  mqttStatus.className = "connected";
-
+  mqttStatus.className = "ok";
   client.subscribe("irrigation/#");
 });
 
-client.on("reconnect", () => {
-  mqttStatus.textContent = "RECONNECTING";
-});
-
-client.on("offline", () => {
-  mqttStatus.textContent = "OFFLINE";
-  mqttStatus.className = "disconnected";
-});
-
-client.on("message", (topic, message) => {
-  const data = message.toString();
-
-  // 🚨 tanda ESP32 aktif
-  lastESP32Time = Date.now();
-  espStatus.textContent = "AKTIF";
-  espStatus.className = "online";
+client.on("message", (topic, msg) => {
+  const data = msg.toString();
+  lastESP32 = Date.now();
+  espStatus.textContent = "ONLINE";
+  espStatus.className = "ok";
 
   if (topic === "irrigation/soil") {
-    document.getElementById("soil").innerText = data;
-    addChartData(data);
+    soil.textContent = data;
+    addSoilData(Number(data));
   }
-
-  if (topic === "irrigation/voltage")
-    document.getElementById("volt").innerText = data;
-
-  if (topic === "irrigation/current")
-    document.getElementById("current").innerText = data;
-
-  if (topic === "irrigation/power")
-    document.getElementById("power").innerText = data;
-
-  if (topic === "irrigation/mode")
-    document.getElementById("mode").innerText = data === "1" ? "AUTO" : "MANUAL";
-
-  if (topic === "irrigation/pump")
-    document.getElementById("pompa").innerText = data === "1" ? "ON" : "OFF";
+  if (topic === "irrigation/voltage") volt.textContent = data;
+  if (topic === "irrigation/current") current.textContent = data;
+  if (topic === "irrigation/power") power.textContent = data;
+  if (topic === "irrigation/mode") mode.textContent = data === "1" ? "AUTO" : "MANUAL";
+  if (topic === "irrigation/pump") pompa.textContent = data === "1" ? "ON" : "OFF";
 });
 
-// ================= ESP32 TIMEOUT CHECK =================
 setInterval(() => {
-  if (Date.now() - lastESP32Time > 10000) {
+  if (Date.now() - lastESP32 > 10000) {
     espStatus.textContent = "OFFLINE";
-    espStatus.className = "offline";
+    espStatus.className = "bad";
   }
 }, 2000);
 
-// ================= KONTROL =================
 function toggleMode() {
   client.publish("irrigation/cmd/mode", "TOGGLE");
 }
-
-function setPump(val) {
-  client.publish("irrigation/cmd/pump", val);
+function setPump(v) {
+  client.publish("irrigation/cmd/pump", v);
 }
