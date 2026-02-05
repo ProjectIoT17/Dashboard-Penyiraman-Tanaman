@@ -25,13 +25,13 @@ const modeEl  = document.getElementById("mode");
 const pompaEl = document.getElementById("pompa");
 
 /*********************************************************
- * ESP32 STATUS STATE
+ * ESP32 HEARTBEAT STATE
  *********************************************************/
-let lastESP32Time = null;       // ⬅️ NULL, bukan 0
-let espEverOnline = false;     // ⬅️ FLAG PENTING
-const ESP32_TIMEOUT = 10000;   // 10 detik
+let lastHeartbeat = null;       // waktu heartbeat terakhir
+let heartbeatEver = false;      // apakah pernah menerima heartbeat
+const HEARTBEAT_TIMEOUT = 6000; // ms (sesuai ESP32 publish ~2 detik)
 
-// Status awal (realistis)
+// Status awal dashboard (REALISTIS)
 espStatus.textContent = "CHECKING...";
 espStatus.className = "checking";
 
@@ -56,7 +56,9 @@ const soilChart = new Chart(ctx, {
   options: {
     responsive: true,
     animation: false,
-    scales: { y: { min: 0, max: 100 } }
+    scales: {
+      y: { min: 0, max: 100 }
+    }
   }
 });
 
@@ -77,6 +79,8 @@ function addSoilData(val) {
 client.on("connect", () => {
   mqttStatus.textContent = "CONNECTED";
   mqttStatus.className = "ok";
+
+  // Subscribe SEMUA topic irrigation
   client.subscribe("irrigation/#");
 });
 
@@ -91,21 +95,21 @@ client.on("offline", () => {
 client.on("message", (topic, msg) => {
   const data = msg.toString();
 
-  // ===== DATA SENSOR SAJA =====
-  if (
-    topic === "irrigation/soil" ||
-    topic === "irrigation/voltage" ||
-    topic === "irrigation/current" ||
-    topic === "irrigation/power"
-  ) {
-    lastESP32Time = Date.now();
-    espEverOnline = true;
+  /*******************************************************
+   * HEARTBEAT → SATU-SATUNYA PENENTU STATUS ESP32
+   *******************************************************/
+  if (topic === "irrigation/heartbeat") {
+    lastHeartbeat = Date.now();
+    heartbeatEver = true;
 
     espStatus.textContent = "ONLINE";
     espStatus.className = "ok";
+    return; // heartbeat tidak dipakai untuk UI lain
   }
 
-  // ===== UPDATE UI =====
+  /*******************************************************
+   * DATA SENSOR → DISPLAY SAJA (TIDAK UBAH STATUS)
+   *******************************************************/
   if (topic === "irrigation/soil") {
     soilEl.textContent = data;
     addSoilData(Number(data));
@@ -119,13 +123,13 @@ client.on("message", (topic, msg) => {
 });
 
 /*********************************************************
- * ESP32 OFFLINE CHECK (AMAN & REAL-TIME)
+ * HEARTBEAT TIMEOUT CHECK
  *********************************************************/
 setInterval(() => {
-  // Jangan OFFLINE kalau belum pernah ONLINE
-  if (!espEverOnline) return;
+  // Jangan OFFLINE kalau belum pernah ada heartbeat
+  if (!heartbeatEver) return;
 
-  if (Date.now() - lastESP32Time > ESP32_TIMEOUT) {
+  if (Date.now() - lastHeartbeat > HEARTBEAT_TIMEOUT) {
     espStatus.textContent = "OFFLINE";
     espStatus.className = "bad";
   }
