@@ -2,52 +2,67 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard Penyiraman</title>
+  <title>Dashboard Penyiraman Otomatis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 
   <!-- MQTT -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <!-- Chart -->
+
+  <!-- Chart.js (WAJIB) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-<h2>🌱 Dashboard Penyiraman Otomatis</h2>
+<header>
+  🌱 Dashboard Penyiraman Otomatis
+</header>
 
 <!-- STATUS BAR -->
 <div class="status-bar">
-  <div>MQTT : <span id="mqttStatus" class="disconnected">DISCONNECTED</span></div>
-  <div>SISTEM IoT : <span id="espStatus" class="offline">OFFLINE</span></div>
+  <div>MQTT : <span id="mqttStatus" class="ok">CONNECTED</span></div>
+  <div>SISTEM IoT : <span id="espStatus" class="bad">OFFLINE</span></div>
 </div>
 
+<!-- CARD UTAMA -->
 <div class="card">
-  <h1><span id="soil">--</span>%</h1>
-  <p>Kelembapan Tanah</p>
 
-  <canvas id="soilChart"></canvas>
+  <div class="soil-value">
+    <span id="soil">--</span>%
+    <p>Kelembapan Tanah</p>
+  </div>
 
-  <div class="row">
-    <div class="box">
+  <!-- ===== GRAFIK REAL TIME ===== -->
+  <div class="chart-box">
+    <canvas id="soilChart"></canvas>
+  </div>
+
+  <div class="info-row">
+    <div class="info-box">
       <p>Volt</p>
-      <span id="volt">--</span> <small>V</small>
+      <span id="volt">--</span> V
     </div>
-    <div class="box">
+    <div class="info-box">
       <p>Arus</p>
-      <span id="current">--</span> <small>mA</small>
+      <span id="current">--</span> mA
     </div>
-    <div class="box">
+    <div class="info-box">
       <p>Daya</p>
-      <span id="power">--</span> <small>W</small>
+      <span id="power">--</span> W
     </div>
   </div>
 
-  <p>Mode: <b><span id="mode">--</span></b></p>
-  <p>Pompa: <b><span id="pompa">--</span></b></p>
+  <p class="status-text">Mode: <b id="mode">--</b></p>
+  <p class="status-text">Pompa: <b id="pompa">--</b></p>
 
-  <button onclick="toggleMode()">GANTI MODE</button><br>
-  <button class="on" onclick="setPump('ON')">POMPA ON</button>
-  <button class="off" onclick="setPump('OFF')">POMPA OFF</button>
+  <button class="btn mode" onclick="toggleMode()">GANTI MODE</button>
+  <div class="btn-row">
+    <button class="btn on" onclick="setPump('ON')">POMPA ON</button>
+    <button class="btn off" onclick="setPump('OFF')">POMPA OFF</button>
+  </div>
+
 </div>
 
 <footer>
