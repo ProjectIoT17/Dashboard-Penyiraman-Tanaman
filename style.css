@@ -1,52 +1,80 @@
 body {
   font-family: Arial, sans-serif;
-  background: #f4f6f8;
+  background: #f2f6f9;
   text-align: center;
-  padding: 20px;
+  margin: 0;
+}
+
+h2 {
+  background: #2ecc71;
+  color: white;
+  padding: 15px;
+  margin: 0;
 }
 
 .status {
-  margin-bottom: 10px;
+  margin: 10px;
+  font-weight: bold;
 }
 
-.connected { color: green; font-weight: bold; }
-.disconnected { color: red; font-weight: bold; }
+.connected {
+  color: green;
+}
+
+.disconnected {
+  color: red;
+}
 
 .card {
-  background: #fff;
-  padding: 20px;
-  max-width: 340px;
-  margin: auto;
+  background: white;
+  max-width: 420px;
+  margin: 15px auto;
+  padding: 15px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
 
-h1 {
-  font-size: 42px;
-  color: #27ae60;
+canvas {
+  width: 100% !important;
+  height: 250px !important;
+  margin-top: 15px;
 }
 
 .row {
   display: flex;
   justify-content: space-between;
+  margin-top: 15px;
 }
 
 .box {
   background: #ecf0f1;
-  width: 30%;
   padding: 10px;
   border-radius: 8px;
+  width: 30%;
 }
 
 button {
-  margin: 6px;
-  padding: 10px 16px;
+  width: 90%;
+  padding: 10px;
+  margin-top: 8px;
+  font-size: 15px;
   border: none;
   border-radius: 6px;
+  color: white;
   cursor: pointer;
   background: #3498db;
-  color: white;
 }
 
-button.on { background: #2ecc71; }
-button.off { background: #e74c3c; }
+button.on {
+  background: green;
+}
+
+button.off {
+  background: red;
+}
+
+footer {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #555;
+}
