@@ -2,10 +2,17 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard Penyiraman</title>
+  <title>Dashboard Penyiraman Otomatis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+  <!-- MQTT -->
+  <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -17,7 +24,10 @@
 
 <div class="card">
   <h1><span id="soil">--</span>%</h1>
-  <p>Kelembapan AVG</p>
+  <p>Kelembapan Tanah</p>
+
+  <!-- ===== GRAFIK ===== -->
+  <canvas id="soilChart"></canvas>
 
   <div class="row">
     <div class="box">
@@ -30,26 +40,23 @@
     </div>
     <div class="box">
       <p>Daya</p>
-      <span id="power">--</span> <small>Watt</small>
+      <span id="power">--</span> <small>W</small>
     </div>
   </div>
 
   <p>Mode: <b><span id="mode">--</span></b></p>
   <p>Pompa: <b><span id="pompa">--</span></b></p>
 
-  <button onclick="setMode('AUTO')">AUTO</button>
-  <button onclick="setMode('MANUAL')">MANUAL</button><br>
+  <button onclick="setMode()">GANTI MODE</button><br>
   <button class="on" onclick="setPump('ON')">POMPA ON</button>
   <button class="off" onclick="setPump('OFF')">POMPA OFF</button>
-  </div>
-  
-</div>
-<footer>
-            <p>ESP32 - HiveMQ - IoT Penyiraman Otomatis</p>
-        </footer>
 </div>
 
+<footer>
+  <p>ESP32 – HiveMQ – IoT Penyiraman Otomatis</p>
+</footer>
+
+<!-- JS HARUS DI AKHIR -->
 <script src="script.js"></script>
 </body>
 </html>
-
