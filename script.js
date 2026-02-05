@@ -1,4 +1,6 @@
-/**************** CONFIG ****************/
+/*********************************************************
+ * MQTT CONFIG
+ *********************************************************/
 const client = mqtt.connect(
   "wss://d8b9ac96f2374248a0784545f5e59901.s1.eu.hivemq.cloud:8884/mqtt",
   {
@@ -9,7 +11,9 @@ const client = mqtt.connect(
   }
 );
 
-/**************** ELEMENT ****************/
+/*********************************************************
+ * ELEMENT
+ *********************************************************/
 const mqttStatus = document.getElementById("mqttStatus");
 const espStatus  = document.getElementById("espStatus");
 
@@ -20,15 +24,20 @@ const powerEl = document.getElementById("power");
 const modeEl  = document.getElementById("mode");
 const pompaEl = document.getElementById("pompa");
 
-/**************** STATUS STATE ****************/
-let lastHeartbeat = 0;
-let firstHeartbeatReceived = false;
+/*********************************************************
+ * ESP32 STATUS STATE
+ *********************************************************/
+let lastESP32Time = null;       // ⬅️ NULL, bukan 0
+let espEverOnline = false;     // ⬅️ FLAG PENTING
+const ESP32_TIMEOUT = 10000;   // 10 detik
 
-const HEARTBEAT_TIMEOUT = 6000; // ms
-const CHECKING_TIMEOUT  = 5000; // ms
-const pageLoadTime = Date.now();
+// Status awal (realistis)
+espStatus.textContent = "CHECKING...";
+espStatus.className = "checking";
 
-/**************** CHART ****************/
+/*********************************************************
+ * CHART SETUP
+ *********************************************************/
 const ctx = document.getElementById("soilChart").getContext("2d");
 
 const soilChart = new Chart(ctx, {
@@ -39,21 +48,32 @@ const soilChart = new Chart(ctx, {
       label: "Kelembapan (%)",
       data: [],
       borderColor: "#2ecc71",
-      backgroundColor: "rgba(46, 204, 113, 0.2)",
-      tension: 0.3,
+      backgroundColor: "rgba(46,204,113,0.3)",
+      tension: 0.4,
       fill: true
     }]
   },
   options: {
     responsive: true,
     animation: false,
-    scales: {
-      y: { min: 0, max: 100 }
-    }
+    scales: { y: { min: 0, max: 100 } }
   }
 });
 
-/**************** MQTT EVENTS ****************/
+function addSoilData(val) {
+  soilChart.data.labels.push(new Date().toLocaleTimeString());
+  soilChart.data.datasets[0].data.push(val);
+
+  if (soilChart.data.labels.length > 30) {
+    soilChart.data.labels.shift();
+    soilChart.data.datasets[0].data.shift();
+  }
+  soilChart.update();
+}
+
+/*********************************************************
+ * MQTT EVENTS
+ *********************************************************/
 client.on("connect", () => {
   mqttStatus.textContent = "CONNECTED";
   mqttStatus.className = "ok";
@@ -65,67 +85,55 @@ client.on("offline", () => {
   mqttStatus.className = "bad";
 });
 
-/**************** MESSAGE HANDLER ****************/
+/*********************************************************
+ * MQTT MESSAGE HANDLER
+ *********************************************************/
 client.on("message", (topic, msg) => {
   const data = msg.toString();
 
-  // ===== HEARTBEAT =====
-  if (topic === "irrigation/heartbeat") {
-    lastHeartbeat = Date.now();
-    firstHeartbeatReceived = true;
+  // ===== DATA SENSOR SAJA =====
+  if (
+    topic === "irrigation/soil" ||
+    topic === "irrigation/voltage" ||
+    topic === "irrigation/current" ||
+    topic === "irrigation/power"
+  ) {
+    lastESP32Time = Date.now();
+    espEverOnline = true;
 
     espStatus.textContent = "ONLINE";
     espStatus.className = "ok";
-    return;
   }
 
-  // ===== SENSOR =====
+  // ===== UPDATE UI =====
   if (topic === "irrigation/soil") {
     soilEl.textContent = data;
-
-    const now = new Date().toLocaleTimeString();
-    soilChart.data.labels.push(now);
-    soilChart.data.datasets[0].data.push(Number(data));
-
-    if (soilChart.data.labels.length > 15) {
-      soilChart.data.labels.shift();
-      soilChart.data.datasets[0].data.shift();
-    }
-
-    soilChart.update();
+    addSoilData(Number(data));
   }
 
   if (topic === "irrigation/voltage") voltEl.textContent = data;
   if (topic === "irrigation/current") currEl.textContent = data;
-  if (topic === "irrigation/power")   powerEl.textContent = data;
-  if (topic === "irrigation/mode")    modeEl.textContent = data === "1" ? "AUTO" : "MANUAL";
-  if (topic === "irrigation/pump")    pompaEl.textContent = data === "1" ? "ON" : "OFF";
+  if (topic === "irrigation/power") powerEl.textContent = data;
+  if (topic === "irrigation/mode") modeEl.textContent = data === "1" ? "AUTO" : "MANUAL";
+  if (topic === "irrigation/pump") pompaEl.textContent = data === "1" ? "ON" : "OFF";
 });
 
-/**************** STATUS MONITOR ****************/
+/*********************************************************
+ * ESP32 OFFLINE CHECK (AMAN & REAL-TIME)
+ *********************************************************/
 setInterval(() => {
-  const now = Date.now();
+  // Jangan OFFLINE kalau belum pernah ONLINE
+  if (!espEverOnline) return;
 
-  // BELUM PERNAH heartbeat
-  if (!firstHeartbeatReceived) {
-    if (now - pageLoadTime < CHECKING_TIMEOUT) {
-      espStatus.textContent = "CHECKING...";
-      espStatus.className = "checking";
-    } else {
-      espStatus.textContent = "OFFLINE";
-      espStatus.className = "bad";
-    }
-    return;
-  }
-
-  // PERNAH ONLINE → cek timeout
-  if (now - lastHeartbeat > HEARTBEAT_TIMEOUT) {
+  if (Date.now() - lastESP32Time > ESP32_TIMEOUT) {
     espStatus.textContent = "OFFLINE";
     espStatus.className = "bad";
   }
-}, 1000);
+}, 2000);
 
-/**************** CONTROL ****************/
+/*********************************************************
+ * CONTROL BUTTONS
+ *********************************************************/
 function toggleMode() {
   client.publish("irrigation/cmd/mode", "TOGGLE");
 }
