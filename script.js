@@ -17,18 +17,23 @@ const client = mqtt.connect(
 const mqttStatus = document.getElementById("mqttStatus");
 const espStatus  = document.getElementById("espStatus");
 
-const soilEl    = document.getElementById("soil");
-const voltEl    = document.getElementById("volt");
-const currEl    = document.getElementById("current");
-const powerEl   = document.getElementById("power");
-const modeEl    = document.getElementById("mode");
-const pompaEl   = document.getElementById("pompa");
+const soilEl  = document.getElementById("soil");
+const voltEl  = document.getElementById("volt");
+const currEl  = document.getElementById("current");
+const powerEl = document.getElementById("power");
+const modeEl  = document.getElementById("mode");
+const pompaEl = document.getElementById("pompa");
 
 /*********************************************************
- * ESP32 STATUS TIMER
+ * ESP32 STATUS STATE
  *********************************************************/
-let lastESP32Time = 0;
-const ESP32_TIMEOUT = 10000; // 10 detik
+let lastESP32Time = null;       // ⬅️ NULL, bukan 0
+let espEverOnline = false;     // ⬅️ FLAG PENTING
+const ESP32_TIMEOUT = 10000;   // 10 detik
+
+// Status awal (realistis)
+espStatus.textContent = "CHECKING...";
+espStatus.className = "checking";
 
 /*********************************************************
  * CHART SETUP
@@ -51,9 +56,7 @@ const soilChart = new Chart(ctx, {
   options: {
     responsive: true,
     animation: false,
-    scales: {
-      y: { min: 0, max: 100 }
-    }
+    scales: { y: { min: 0, max: 100 } }
   }
 });
 
@@ -74,13 +77,7 @@ function addSoilData(val) {
 client.on("connect", () => {
   mqttStatus.textContent = "CONNECTED";
   mqttStatus.className = "ok";
-
   client.subscribe("irrigation/#");
-});
-
-client.on("reconnect", () => {
-  mqttStatus.textContent = "RECONNECTING";
-  mqttStatus.className = "bad";
 });
 
 client.on("offline", () => {
@@ -94,9 +91,7 @@ client.on("offline", () => {
 client.on("message", (topic, msg) => {
   const data = msg.toString();
 
-  /* =====================================================
-   * HANYA DATA SENSOR → ESP32 ONLINE
-   * ===================================================== */
+  // ===== DATA SENSOR SAJA =====
   if (
     topic === "irrigation/soil" ||
     topic === "irrigation/voltage" ||
@@ -104,11 +99,13 @@ client.on("message", (topic, msg) => {
     topic === "irrigation/power"
   ) {
     lastESP32Time = Date.now();
+    espEverOnline = true;
+
     espStatus.textContent = "ONLINE";
     espStatus.className = "ok";
   }
 
-  /* ================= UPDATE UI ================= */
+  // ===== UPDATE UI =====
   if (topic === "irrigation/soil") {
     soilEl.textContent = data;
     addSoilData(Number(data));
@@ -122,9 +119,12 @@ client.on("message", (topic, msg) => {
 });
 
 /*********************************************************
- * ESP32 OFFLINE CHECK
+ * ESP32 OFFLINE CHECK (AMAN & REAL-TIME)
  *********************************************************/
 setInterval(() => {
+  // Jangan OFFLINE kalau belum pernah ONLINE
+  if (!espEverOnline) return;
+
   if (Date.now() - lastESP32Time > ESP32_TIMEOUT) {
     espStatus.textContent = "OFFLINE";
     espStatus.className = "bad";
